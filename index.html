@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="宅建一問一答">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="manifest" href="manifest.json">
+  <title>宅建一問一答</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ホーム画面 -->
+<div id="screen-home" class="screen active">
+  <header class="home-header">
+    <h1>宅建一問一答</h1>
+    <p class="subtitle">宅地建物取引士試験対策</p>
+  </header>
+
+  <section class="overview-stats">
+    <div class="stat-box">
+      <span class="stat-number" id="stat-answered">0</span>
+      <span class="stat-label">解答数</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number" id="stat-rate">—</span>
+      <span class="stat-label">正答率</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-number" id="stat-weak">0</span>
+      <span class="stat-label">苦手問題</span>
+    </div>
+  </section>
+
+  <section class="quick-actions">
+    <button class="btn-main" onclick="startQuiz('all')">
+      <span class="btn-icon">📝</span>
+      <span class="btn-text">全分野からランダム</span>
+      <span class="btn-count" id="count-all"></span>
+    </button>
+    <button class="btn-main btn-weak" onclick="startQuiz('weak')" id="btn-weak">
+      <span class="btn-icon">⚡</span>
+      <span class="btn-text">苦手問題だけ</span>
+      <span class="btn-count" id="count-weak"></span>
+    </button>
+  </section>
+
+  <section class="category-section">
+    <h2 class="section-title">カテゴリを選んで学習</h2>
+    <div class="category-list" id="category-list"></div>
+  </section>
+
+  <section class="settings-section">
+    <button class="btn-sub" onclick="showStats()">📊 成績を見る</button>
+    <button class="btn-sub btn-danger" onclick="resetConfirm()">🗑 成績をリセット</button>
+  </section>
+</div>
+
+<!-- 設定モーダル（問題数選択） -->
+<div id="modal-settings" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 id="modal-title">問題数を選択</h3>
+    <p id="modal-desc"></p>
+    <div class="count-options">
+      <button class="btn-count-opt" onclick="confirmStart(10)">10問</button>
+      <button class="btn-count-opt" onclick="confirmStart(20)">20問</button>
+      <button class="btn-count-opt" onclick="confirmStart(30)">30問</button>
+      <button class="btn-count-opt" onclick="confirmStart(50)">50問</button>
+      <button class="btn-count-opt btn-all-q" onclick="confirmStart(0)">全問</button>
+    </div>
+    <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- クイズ画面 -->
+<div id="screen-quiz" class="screen">
+  <header class="quiz-header">
+    <button class="btn-back" onclick="goHome()">✕</button>
+    <div class="quiz-meta">
+      <span class="quiz-category" id="q-category"></span>
+      <span class="quiz-progress" id="q-progress">1 / 10</span>
+    </div>
+    <button class="btn-flag" id="flag-btn" onclick="toggleFlag()" title="苦手フラグ">☆</button>
+  </header>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <main class="quiz-body">
+    <div class="question-card">
+      <p class="question-text" id="q-text"></p>
+    </div>
+
+    <div class="answer-area">
+      <button class="btn-maru" onclick="submitAnswer(true)">
+        <span class="ans-symbol">○</span>
+        <span class="ans-label">正しい</span>
+      </button>
+      <button class="btn-batsu" onclick="submitAnswer(false)">
+        <span class="ans-symbol">×</span>
+        <span class="ans-label">誤り</span>
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- 結果画面 -->
+<div id="screen-result" class="screen">
+  <header class="quiz-header">
+    <button class="btn-back" onclick="goHome()">✕</button>
+    <div class="quiz-meta">
+      <span class="quiz-category" id="r-category"></span>
+      <span class="quiz-progress" id="r-progress"></span>
+    </div>
+    <button class="btn-flag" id="r-flag-btn" onclick="toggleFlag()" title="苦手フラグ">☆</button>
+  </header>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="r-progress-fill" style="width:0%"></div>
+  </div>
+
+  <main class="result-body">
+    <div class="result-verdict" id="result-verdict">
+      <span class="verdict-icon" id="verdict-icon"></span>
+      <span class="verdict-text" id="verdict-text"></span>
+    </div>
+
+    <div class="result-question-box">
+      <p class="result-q-text" id="r-q-text"></p>
+      <div class="correct-ans" id="correct-ans"></div>
+    </div>
+
+    <div class="explanation-box">
+      <h4>解説</h4>
+      <p id="explanation"></p>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">次の問題 →</button>
+      <button class="btn-finish" onclick="showSummary()">終了する</button>
+    </div>
+  </main>
+</div>
+
+<!-- サマリー画面 -->
+<div id="screen-summary" class="screen">
+  <div class="summary-body">
+    <div class="summary-header-icon" id="summary-icon"></div>
+    <h2 class="summary-title">セッション完了！</h2>
+    <div class="summary-score-display" id="summary-score"></div>
+    <div class="summary-bars" id="summary-bars"></div>
+    <div class="summary-actions">
+      <button class="btn-main" onclick="restartQuiz()">もう一度</button>
+      <button class="btn-sub" onclick="goHome()">ホームへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- 統計画面 -->
+<div id="screen-stats" class="screen">
+  <header class="stats-header">
+    <button class="btn-back" onclick="goHome()">← ホーム</button>
+    <h2>成績・統計</h2>
+  </header>
+  <div class="stats-body" id="stats-body"></div>
+</div>
+
+<script src="questions.js"></script>
+<script src="questions2.js"></script>
+<script src="questions3.js"></script>
+<script src="questions4.js"></script>
+<script src="questions5.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
